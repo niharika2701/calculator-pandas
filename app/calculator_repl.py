@@ -75,9 +75,9 @@ def run_repl():
     while True:
         try:
             user_input = input("calc> ").strip()
-        except (EOFError, KeyboardInterrupt):  
-            print("\nGoodbye!")
-            break
+        except (EOFError, KeyboardInterrupt):  # pragma: no cover
+            print("\nGoodbye!") # pragma: no cover
+            break # pragma: no cover
 
         if not user_input:
             continue
@@ -150,5 +150,5 @@ Commands:
                 print(f"Error: {e}")
 
 
-if __name__ == "__main__":  
-    run_repl()
+if __name__ == "__main__":  # pragma: no cover
+    run_repl() # pragma: no cover

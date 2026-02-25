@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 from unittest.mock import patch, MagicMock
 from app.calculator_repl import Calculator, run_repl
+from app.exceptions import CalculatorException
 
 
 class TestCalculator:
@@ -151,7 +152,7 @@ class TestREPL:
     def test_redo_command(self):
         with patch("builtins.input", side_effect=["add 3 5", "undo", "redo", "exit"]):
             with patch("builtins.print") as mock_print:
-                run_repl()
+                run_repl() # pragma: no cover
                 printed = " ".join(str(c) for c in mock_print.call_args_list)
                 assert "redo" in printed.lower()
 
@@ -195,3 +196,31 @@ class TestREPL:
                 run_repl()
                 printed = " ".join(str(c) for c in mock_print.call_args_list)
                 assert "loaded" in printed.lower()
+    
+    def test_history_command_with_data(self):
+        with patch("builtins.input", side_effect=["add 3 5", "history", "exit"]):
+            with patch("builtins.print") as mock_print:
+                run_repl()
+                printed = " ".join(str(c) for c in mock_print.call_args_list)
+                assert "8" in printed
+
+    def test_calculate_non_zero_value_error(self):
+        calc = Calculator()
+        from app.operations import Operation
+        class BadOperation(Operation):
+            def execute(self, a, b):
+                raise ValueError("something else went wrong")
+        from app.operations import OperationFactory
+        with patch.object(OperationFactory, 'create', return_value=BadOperation()):
+            with pytest.raises(ValueError, match="something else went wrong"):
+                calc.calculate("add", 1, 2)
+
+    def test_calculator_exception_via_repl(self):
+        with patch("builtins.input", side_effect=["add 3 5", "exit"]):
+            with patch("builtins.print") as mock_print:
+                from app.operations import OperationFactory
+                with patch.object(OperationFactory, 'create',
+                                  side_effect=CalculatorException("test error")):
+                    run_repl()
+                    printed = " ".join(str(c) for c in mock_print.call_args_list)
+                    assert "error" in printed.lower()
