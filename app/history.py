@@ -20,14 +20,17 @@ class HistoryManager:
             observer.update(event)
 
     def add(self, calculation) -> None:
-        
-        new_row = pd.DataFrame([{
-            "operand_a": calculation.operand_a,
-            "operand_b": calculation.operand_b,
-            "operation": type(calculation.operation).__name__,
-            "result": calculation.result
-        }])
-        self._df = pd.concat([self._df, new_row], ignore_index=True)
+        new_row = {
+        "operand_a": calculation.operand_a,
+        "operand_b": calculation.operand_b,
+        "operation": type(calculation.operation).__name__,
+        "result": calculation.result
+    }
+        self._df = pd.concat(
+        [self._df, pd.DataFrame([new_row])],
+        ignore_index=True
+    )
+        self._df = self._df.infer_objects()
         self._notify_observers("add")
 
     def get_all(self) -> pd.DataFrame:
